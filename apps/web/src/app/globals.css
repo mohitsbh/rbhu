@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+:root {
+  --rbhu-indigo: #1e1b4b;
+  --rbhu-accent: #4f46e5;
+}
+
+body {
+  background: #f6f7fb;
+  color: #0f172a;
+}

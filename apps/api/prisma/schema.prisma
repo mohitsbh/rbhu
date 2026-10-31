@@ -1,0 +1,118 @@
+// RBHU Platform – Prisma schema
+// Soft delete via deletedAt, basic audit fields on business records,
+// status audit trail for shipments, chat history for the AI assistant.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CustomerStatus {
+  Active
+  Inactive
+}
+
+enum ShipmentStatus {
+  Pending
+  InTransit
+  Delivered
+  Cancelled
+}
+
+enum UserRole {
+  Admin
+  Staff
+}
+
+model Customer {
+  id        String         @id @default(cuid())
+  name      String
+  email     String
+  company   String
+  status    CustomerStatus @default(Active)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+  updatedBy String?
+
+  shipments Shipment[]
+
+  @@index([deletedAt])
+  @@unique([email, company, deletedAt], map: "customer_email_company_deletedAt_key")
+}
+
+model Shipment {
+  id             String         @id @default(cuid())
+  trackingNumber String         @unique
+  customerId     String
+  origin         String
+  destination    String
+  status         ShipmentStatus @default(Pending)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+  createdBy      String?
+  updatedBy      String?
+
+  customer Customer        @relation(fields: [customerId], references: [id])
+  events   ShipmentEvent[]
+
+  @@index([status])
+  @@index([customerId])
+  @@index([deletedAt])
+}
+
+model ShipmentEvent {
+  id         String         @id @default(cuid())
+  shipmentId String
+  fromStatus ShipmentStatus?
+  toStatus   ShipmentStatus
+  createdAt  DateTime       @default(now())
+  actor      String?
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id])
+
+  @@index([shipmentId])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(Staff)
+  createdAt    DateTime @default(now())
+
+  chatSessions ChatSession[]
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String   @default("New chat")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id])
+  messages ChatMessage[]
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  // user | assistant | system
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id])
+
+  @@index([sessionId])
+}

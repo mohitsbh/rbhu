@@ -1,0 +1,26 @@
+version: "3.9"
+
+# If you prefer Docker over the portable PostgreSQL scripts, start the DB with:
+#   docker compose up -d db
+# DATABASE_URL=postgresql://rbhu:RbhuDemo%40123@localhost:5433/rbhu_platform?schema=public
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rbhu-db
+    environment:
+      POSTGRES_USER: rbhu
+      POSTGRES_PASSWORD: RbhuDemo@123
+      POSTGRES_DB: rbhu_platform
+    ports:
+      - "5433:5432"
+    volumes:
+      - rbhu-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rbhu -d rbhu_platform"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  rbhu-pgdata:
