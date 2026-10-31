@@ -56,7 +56,7 @@ export function createApp(): Express {
   app.use(
     "/docs",
     swaggerUi.serve,
-    swaggerUi.setup(openApiDocument, { title: "RBHU Platform API", customSiteTitle: "RBHU Platform API Docs" }),
+    swaggerUi.setup(openApiDocument, { customSiteTitle: "RBHU Platform API Docs" }),
   );
 
   // Business routes (protected)

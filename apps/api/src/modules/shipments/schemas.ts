@@ -27,6 +27,6 @@ export const listShipmentsQuery = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(10),
 });
 
-export type ShipmentStatus = z.infer<(typeof SHIPMENT_STATUSES) extends never ? never : typeof SHIPMENT_STATUSES>[number];
+export type ShipmentStatus = (typeof SHIPMENT_STATUSES)[number];
 export type CreateShipmentInput = z.infer<typeof createShipmentSchema>;
 export type ListShipmentsQuery = z.infer<typeof listShipmentsQuery>;

@@ -2,7 +2,6 @@
 // the authenticated principal to the request. Guard for WebSocket upgrades too.
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import type { StringValue } from "jsonwebtoken";
 import { env } from "../env.js";
 import { Unauthorized, Forbidden } from "./errors.js";
 
@@ -20,7 +19,7 @@ declare module "express-serve-static-core" {
 }
 
 export function signToken(p: AuthPrincipal) {
-  return jwt.sign(p, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN as StringValue, issuer: "rbhu-api" });
+  return jwt.sign(p, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"], issuer: "rbhu-api" });
 }
 
 export function verifyToken(token: string): AuthPrincipal | null {
