@@ -1,7 +1,7 @@
 // Shipment data access (Repository layer).
 import { prisma } from "../../lib/prisma.js";
 import type { Prisma } from "@prisma/client";
-import type { CreateShipmentInput, ListShipmentsQuery } from "./schemas.js";
+import type { CreateShipmentInput, ListShipmentsQuery, ShipmentStatus } from "./schemas.js";
 
 const publicSelect = {
   id: true,
@@ -70,16 +70,16 @@ export const shipmentRepository = {
   },
 
   create(data: CreateShipmentInput & { createdBy: string }) {
-    // Omit status (default Pending on create) – creation is always initial
-    const { status, ...rest } = data;
-    void status;
+    // Status defaults to Pending on create, but an explicit status is honored
+    // (audit event records the transition from null -> status).
+    const { status = "Pending", ...rest } = data;
     return prisma.$transaction(async (tx) => {
       const shipment = await tx.shipment.create({
-        data: rest,
+        data: { ...rest, status },
         select: publicSelect,
       });
       await tx.shipmentEvent.create({
-        data: { shipmentId: shipment.id, fromStatus: null, toStatus: "Pending", actor: data.createdBy },
+        data: { shipmentId: shipment.id, fromStatus: null, toStatus: status, actor: data.createdBy },
       });
       return shipment;
     });
@@ -88,7 +88,7 @@ export const shipmentRepository = {
   /** Status transition + audit event + updated row in one transaction. */
   updateStatus(
     id: string,
-    to: "Pending" | "InTransit" | "Delivered" | "Cancelled",
+    to: ShipmentStatus,
     actor: string,
   ) {
     return prisma.$transaction(async (tx) => {

@@ -31,11 +31,11 @@ export const customerService = {
   },
 
   async update(id: string, input: UpdateCustomerInput, actor: string): Promise<CustomerDTO> {
-    await this.getById(id); // 404 if missing/soft-deleted
+    const existing = await this.getById(id); // 404 if missing/soft-deleted
     if (input.email || input.company) {
       const dup = await customerRepository.emailExists(
-        input.email ?? (await customerRepository.findById(id))!.email,
-        input.company ?? (await customerRepository.findById(id))!.company,
+        input.email ?? existing.email,
+        input.company ?? existing.company,
         id,
       );
       if (dup) throw Conflict("A customer with this email already exists for this company");
