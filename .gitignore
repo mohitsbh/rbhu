@@ -30,3 +30,6 @@ tsconfig.tsbuildinfo
 Thumbs.db
 *.log
 coverage/
+
+# private interview prep (never publish)
+INTERVIEW-PREP.md
