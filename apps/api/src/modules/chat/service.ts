@@ -86,11 +86,31 @@ export const chatService = {
     history.reverse();
 
     // 3. Generate reply
+    let systemPrompt = SYSTEM_PROMPT;
+    if (env.OPENAI_API_KEY) {
+      // Ground live answers in the same authoritative state the mock uses.
+      const [statusSummary, activeCustomers] = await Promise.all([
+        shipmentRepository.statusSummary(),
+        customerRepository.activeCount(),
+      ]);
+      const counts: Record<string, number> = { Pending: 0, InTransit: 0, Delivered: 0, Cancelled: 0 };
+      for (const r of statusSummary) counts[r.status] = r._count.status;
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      const recent = (await shipmentRepository.recent(3))
+        .map((s) => `${s.trackingNumber} (${s.status}, ${s.origin} → ${s.destination})`)
+        .join("; ");
+      systemPrompt =
+        SYSTEM_PROMPT +
+        `\n\nCURRENT PLATFORM STATE (authoritative, use these exact numbers):\n` +
+        `- Total shipments: ${total} — Pending: ${counts.Pending}, InTransit: ${counts.InTransit}, Delivered: ${counts.Delivered}, Cancelled: ${counts.Cancelled}\n` +
+        `- Active customers: ${activeCustomers}\n` +
+        `- Recent shipments: ${recent || "none recorded yet"}`;
+    }
     let content: string;
     let provider: Reply["provider"] = env.OPENAI_API_KEY ? "live" : "mock";
     try {
       content = env.OPENAI_API_KEY
-        ? await this.callProvider(history)
+        ? await this.callProvider(history, systemPrompt)
         : await this.mockAnswer(req.message);
     } catch (err) {
       logger.error({ err }, "ai provider failure - handling gracefully");
@@ -116,7 +136,7 @@ export const chatService = {
   },
 
   /** OpenAI-compatible chat completion against any provider. */
-  async callProvider(history: { role: string; content: string }[]): Promise<string> {
+  async callProvider(history: { role: string; content: string }[], systemPrompt: string): Promise<string> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${env.OPENAI_API_KEY}`,
@@ -127,9 +147,13 @@ export const chatService = {
     }
     const payload = {
       model: env.OPENAI_MODEL,
-      max_tokens: 300,
+      // Reasoning models (e.g. NVIDIA Nemotron) spend tokens on a hidden
+      // reasoning pass before the visible answer; budget generously and
+      // disable thinking for a snappy, concise ops assistant.
+      max_tokens: 1000,
       temperature: 0.3,
-      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...history],
+      chat_template_kwargs: { enable_thinking: false },
+      messages: [{ role: "system", content: systemPrompt }, ...history],
     };
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20_000);

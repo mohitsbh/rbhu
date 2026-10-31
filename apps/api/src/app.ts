@@ -64,7 +64,7 @@ export function createApp(): Express {
   app.use(requireAuth); // everything below requires JWT
   app.use("/customers", customerRouter);
   app.use("/shipments", shipmentRouter);
-  app.use(chatRouter); // routes: /chat, /chat/sessions, /chat/sessions/:id/messages
+  app.use("/chat", chatRouter); // routes: POST /, GET /sessions, GET /sessions/:sessionId/messages
   app.use(announcementsRouter); // GET /announcements (Bonus 3)
 
   app.use(notFoundHandler);

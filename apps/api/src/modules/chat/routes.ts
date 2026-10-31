@@ -33,7 +33,7 @@ chatRouter.get(
   },
 );
 
-chatRouter.post("/chat", validate(chatRequestSchema), async (req, res, next) => {
+chatRouter.post("/", validate(chatRequestSchema), async (req, res, next) => {
   try {
     res.json(await chatService.chat(req.principal!, req.body));
   } catch (e) {
