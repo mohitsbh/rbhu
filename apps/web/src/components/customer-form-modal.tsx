@@ -85,7 +85,16 @@ export function CustomerFormModal({ open, onClose, customer }: Props) {
 export function useCustomerModal(onDone: () => void) {
   const [state, setState] = useState<{ open: boolean; customer: Customer | null }>({ open: false, customer: null });
   return {
-    modal: state.open ? <CustomerFormModal open onClose={() => setState({ open: false, customer: null })} onClose={onDone} customer={state.customer} /> : null,
+    modal: state.open ? (
+      <CustomerFormModal
+        open
+        onClose={() => {
+          setState({ open: false, customer: null });
+          onDone();
+        }}
+        customer={state.customer}
+      />
+    ) : null,
     edit: (c: Customer) => setState({ open: true, customer: c }),
     create: () => setState({ open: true, customer: null }),
     close: () => setState({ open: false, customer: null }),
