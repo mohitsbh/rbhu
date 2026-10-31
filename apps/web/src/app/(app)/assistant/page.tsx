@@ -23,7 +23,7 @@ export default function AssistantPage() {
 
   const messages = useQuery({
     queryKey: ["chatMessages", sessionId],
-    queryFn: async () => (await api.get<ChatMessageEntry[]>(`/chat/sessions/${sessionId}/messages`)).data,
+    queryFn: async () => (await api.get<ChatMessageEntry[]>(`/chat/sessions/${sessionId}/messages`)).data.reverse(),
     enabled: sessionId !== null,
   });
 
