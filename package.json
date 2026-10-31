@@ -1,0 +1,20 @@
+{
+  "name": "rbhu-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RBHU Logistics & Operations Platform - FSD assessment (customers, shipments, analytics, AI assistant, realtime notifications)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "db:init": "powershell -ExecutionPolicy Bypass -File scripts/db-init.ps1",
+    "db:start": "powershell -ExecutionPolicy Bypass -File scripts/db-start.ps1",
+    "db:stop": "powershell -ExecutionPolicy Bypass -File scripts/db-stop.ps1",
+    "migrate": "npm run migrate --workspace apps/api",
+    "seed": "npm run seed --workspace apps/api",
+    "dev:api": "npm run dev --workspace apps/api",
+    "dev:web": "npm run dev --workspace apps/web",
+    "dev:analytics": "npm run dev --workspace apps/analytics",
+    "build": "npm run build --workspace apps/api && npm run build --workspace apps/web"
+  }
+}

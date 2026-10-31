@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+__pycache__/
+.venv/
+*.pyc
+
+# next.js
+.next/
+out/
+
+# env & secrets
+.env
+.env.local
+apps/*/.env
+apps/*/.env.local
+
+# database (portable postgres cluster)
+.pg/
+
+# prisma
+apps/api/prisma/*.lock
+apps/api/*.db
+
+# build
+dist/
+tsconfig.tsbuildinfo
+
+# misc
+.DS_Store
+Thumbs.db
+*.log
+coverage/
